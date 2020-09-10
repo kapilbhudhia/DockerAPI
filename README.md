@@ -2,7 +2,7 @@
 This application serves as a small demonstration for accessing the Docker REST API using the Docker.DotNet nuget package
 
 ### Building/Running the application
-The application is supposed to be built as a docker image. The best way would be to open the solution file in Visual Studio 19.0 and run the application 
+The application is a very minimalistic Balzor app and is supposed to be built as a docker image. The best way would be to open the solution file in Visual Studio 19.0 and run the application 
 in either Debug or Release mode selecting Docker as the runtime configuration.
 
 ### Running the application standalone (not using Visual studio)
