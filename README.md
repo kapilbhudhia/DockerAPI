@@ -14,7 +14,7 @@ in the local docker repository. You can use the following image subsequently to 
 
 - The application makes REST Api calls to the docker daemon using the unix socket so make sure that in the above command the daemon socket is volume mounted for the application to connect to 
 - The application creates new containers for the following docker image : vad1mo/hello-world-rest, so make sure that this image is already pulled to your local docker repository
-docker pull vad1mo/hello-world-rest:latest`
+`docker pull vad1mo/hello-world-rest:latest`
 
 ### Report Issues/ Request Enhancements
 Please contact kapilbhudhia@gmail.com for raising any issues or for adding more features.
