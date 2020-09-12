@@ -1,0 +1,59 @@
+﻿@page "/containers"
+
+
+@using Docker.DotNet
+@using Docker.DotNet.Models
+@using System.Threading
+@using ContainerCreationUsingDockerAPI.Data
+
+@inject ContainerService ContainerService
+
+
+<h3>Containers</h3>
+<p>Total no of containers: @containerCount</p>
+
+<button class="btn btn-primary" @onclick="CreateNew">Start a new container</button>
+@foreach (var container in containers)
+{
+    <div class="shadow-sm p-3 mb-3 bg-light rounded">
+        <div class="row">
+            <div class="col-4">@container.Name</div>
+            <div class="col-7"><a href=@container.Link target="_blank">Try Me</a> </div>
+            <div class="col-1">
+                <button type="button" class="close" aria-label="Close">
+                    <span aria-hidden="true" @onclick="@(async () => { await StopContainer(@container.ID); })">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    private int containerCount = 0;
+
+
+    private List<Container> containers = new List<Container>();
+
+    private async Task StopContainer(string ID)
+    {
+
+        await ContainerService.StopContainerAsync(ID);
+        containers = await ContainerService.GetContainersAsync();
+
+    }
+
+    private async Task CreateNew()
+    {
+        await ContainerService.CreateNewAsync();
+        containers = await ContainerService.GetContainersAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        containers = await ContainerService.GetContainersAsync();
+    }
+
+
+
+}
