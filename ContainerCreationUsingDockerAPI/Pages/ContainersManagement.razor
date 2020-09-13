@@ -10,7 +10,7 @@
 
 
 <h3>Containers</h3>
-<p>Total no of containers: @containerCount</p>
+<p>Total no of containers: @containers.Count</p>
 
 <button class="btn btn-primary" @onclick="CreateNew">Start a new container</button>
 @foreach (var container in containers)
@@ -29,9 +29,6 @@
 }
 
 @code {
-
-    private int containerCount = 0;
-
 
     private List<Container> containers = new List<Container>();
 
@@ -53,7 +50,4 @@
     {
         containers = await ContainerService.GetContainersAsync();
     }
-
-
-
 }
