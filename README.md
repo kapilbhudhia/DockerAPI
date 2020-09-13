@@ -2,9 +2,7 @@
 This application serves as a small demonstration for accessing the Docker REST API using the **Docker.DotNet** nuget package
 
 ### Pre-requisite
-The application creates new containers for the docker image : **vad1mo/hello-world-rest**, so make sure that this image is already pulled to your local docker repository.
-
-use the following command to pull the Image:
+The application creates new containers for the docker image : **vad1mo/hello-world-rest**, so make sure that this image is already pulled to your local docker repository. Use the following command to pull the Image:
 
 ```docker pull vad1mo/hello-world-rest:latest```
 
