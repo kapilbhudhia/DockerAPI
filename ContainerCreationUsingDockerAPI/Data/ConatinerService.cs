@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Docker.DotNet;
@@ -18,6 +19,7 @@ namespace ContainerCreationUsingDockerAPI.Data
         }
         public async Task<List<Container>> GetContainersAsync()
         {
+            await TestCreateAndExecContainer();
             try
             {
                 string imageName = "vad1mo/hello-world-rest:latest";
@@ -113,6 +115,56 @@ namespace ContainerCreationUsingDockerAPI.Data
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task TestCreateAndExecContainer()
+        {
+            try
+            {
+                var _client = new DockerClientConfiguration().CreateClient();
+                string randomPort = new Random().Next(50000, 60000).ToString();
+                var containerResponse = await _client.Containers.CreateContainerAsync(new CreateContainerParameters()
+                {
+                    Image = "klingelnberg.azurecr.io/gearengine/mongo:4.0",
+                    HostConfig = new HostConfig()
+                    {
+                        PortBindings = new Dictionary<string, IList<PortBinding>>()
+                        {
+                            { "5050/tcp",  new List<PortBinding>()
+                            {
+                                new PortBinding(){HostPort = randomPort}
+                            }}
+                        }
+                    }
+
+                }, CancellationToken.None);
+
+                // way 1
+                await _client.Exec.StartContainerExecAsync(
+                    containerResponse.ID,
+                    cancellationToken: CancellationToken.None);
+
+                //// way 2
+                //// code reference in the first comment of https://github.com/dotnet/Docker.DotNet/issues/367
+                //bool started = await _client.Containers.StartContainerAsync(containerResponse.ID, null);
+                //using (var stream = await _client.Exec.StartAndAttachContainerExecAsync(
+                //    containerResponse.ID,
+                //    false,
+                //    default(CancellationToken)))
+                //{
+                //    var filePath = "dump/" + new Random().Next(1000);
+                //    var createFolder = Encoding.ASCII.GetBytes($"mkdir -p " + filePath);
+                //    var mongodump = Encoding.ASCII.GetBytes($"mongodump  --forceTableScan --db CorrectionLoop --out " + filePath);
+                //    await stream.WriteAsync(createFolder, 0, createFolder.Length, default(CancellationToken));
+                //    await stream.WriteAsync(mongodump, 0, mongodump.Length, default(CancellationToken));
+                //}
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
                 throw;
             }
         }
