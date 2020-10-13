@@ -12,7 +12,7 @@ namespace ContainerCreationUsingDockerAPI.Data
     {
         private Random randomPortGenerator = new Random();
         private DockerClient _client = null;
-        private string mongoDbimage = "klingelnberg.azurecr.io/gearengine/mongo:4.0";
+        private string  imageName = "vad1mo/hello-world-rest:latest";
         public ContainerService()
         {
             _client = new DockerClientConfiguration().CreateClient();
@@ -21,7 +21,6 @@ namespace ContainerCreationUsingDockerAPI.Data
         {
             try
             {
-                string imageName = "vad1mo/hello-world-rest:latest";
                 List<Container> containers = new List<Container>();
                 IList<ContainerListResponse> containersResponse = await _client.Containers.ListContainersAsync(
                     new ContainersListParameters()
@@ -32,7 +31,7 @@ namespace ContainerCreationUsingDockerAPI.Data
                             {
                                 "ancestor", new Dictionary<string, bool>()
                                 {
-                                    {mongoDbimage, true}
+                                    {imageName, true}
                                 }
                             }
                         }
@@ -134,7 +133,7 @@ namespace ContainerCreationUsingDockerAPI.Data
                                 "ancestor", new Dictionary<string, bool>()
                                 {
                                     {
-                                        mongoDbimage, true
+                                        imageName, true
                                     }
                                 }
                             }
@@ -156,18 +155,6 @@ namespace ContainerCreationUsingDockerAPI.Data
                     });
 
                 await _client.Exec.StartContainerExecAsync(execResponse.ID);
-
-                var execResponse2 = await _client.Exec.ExecCreateContainerAsync(
-                    containersResponse.First().ID,//containerResponse.ID,
-                    new ContainerExecCreateParameters()
-                    {
-                        Cmd = new[]
-                        {
-                            "/bin/sh", "-c",  " mongodump  --forceTableScan --db CorrectionLoop --out dump/yyyyMMdd_HHmmss123456"
-                        }
-                    });
-
-                await _client.Exec.StartContainerExecAsync(execResponse2.ID);
             }
             catch (Exception ex)
             {
