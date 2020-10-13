@@ -149,7 +149,14 @@ namespace ContainerCreationUsingDockerAPI.Data
                     {
                         Cmd = new[]
                         {
-                            "/bin/sh", "-c",  " mkdir -p /dump/yyyyMMdd_HHmmss123456",
+                            "/bin/sh",
+                            "-c",
+                            // command 1
+                            " mkdir -p /dump/yyyyMMdd_HHmmss" +
+                            // append operator
+                            " && " +
+                            // command 2
+                            " mongodump  --forceTableScan --db CorrectionLoop --out dump/yyyyMMdd_HHmmss",
 
                         }
                     });
