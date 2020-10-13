@@ -156,7 +156,7 @@ namespace ContainerCreationUsingDockerAPI.Data
                             // append operator
                             " && " +
                             // command 2
-                            " mongodump  --forceTableScan --db CorrectionLoop --out dump/yyyyMMdd_HHmmss",
+                            " mkdir -p /dump/yyyyMMdd_HHmmss2",
 
                         }
                     });
