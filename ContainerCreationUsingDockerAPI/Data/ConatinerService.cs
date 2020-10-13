@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Docker.DotNet;
@@ -13,13 +12,13 @@ namespace ContainerCreationUsingDockerAPI.Data
     {
         private Random randomPortGenerator = new Random();
         private DockerClient _client = null;
+        private string mongoDbimage = "klingelnberg.azurecr.io/gearengine/mongo:4.0";
         public ContainerService()
         {
             _client = new DockerClientConfiguration().CreateClient();
         }
         public async Task<List<Container>> GetContainersAsync()
         {
-            await TestCreateAndExecContainer();
             try
             {
                 string imageName = "vad1mo/hello-world-rest:latest";
@@ -33,7 +32,7 @@ namespace ContainerCreationUsingDockerAPI.Data
                             {
                                 "ancestor", new Dictionary<string, bool>()
                                 {
-                                    {imageName, true}
+                                    {mongoDbimage, true}
                                 }
                             }
                         }
@@ -78,6 +77,8 @@ namespace ContainerCreationUsingDockerAPI.Data
 
         public async Task CreateNewAsync()
         {
+            await TestMongoDbBackup();
+
             try
             {
                 string randomPort = randomPortGenerator.Next(50000, 60000).ToString();
@@ -119,53 +120,58 @@ namespace ContainerCreationUsingDockerAPI.Data
             }
         }
 
-        public async Task TestCreateAndExecContainer()
+        public async Task TestMongoDbBackup()
         {
             try
             {
-                var _client = new DockerClientConfiguration().CreateClient();
-                string randomPort = new Random().Next(50000, 60000).ToString();
-                var containerResponse = await _client.Containers.CreateContainerAsync(new CreateContainerParameters()
-                {
-                    Image = "klingelnberg.azurecr.io/gearengine/mongo:4.0",
-                    HostConfig = new HostConfig()
+                IList<ContainerListResponse> containersResponse = await _client.Containers.ListContainersAsync(
+                    new ContainersListParameters()
                     {
-                        PortBindings = new Dictionary<string, IList<PortBinding>>()
+                        //Limit = 10,
+                        Filters = new Dictionary<string, IDictionary<string, bool>>()
                         {
-                            { "5050/tcp",  new List<PortBinding>()
                             {
-                                new PortBinding(){HostPort = randomPort}
-                            }}
+                                "ancestor", new Dictionary<string, bool>()
+                                {
+                                    {
+                                        mongoDbimage, true
+                                    }
+                                }
+                            }
                         }
-                    }
+                    });
 
-                }, CancellationToken.None);
 
-                // way 1
-                await _client.Exec.StartContainerExecAsync(
-                    containerResponse.ID,
-                    cancellationToken: CancellationToken.None);
+                // "/bin/sh" is usually a symlink to a shell
+                // -c string If  the  -c  option  is  present, then commands are read from string.
+                var execResponse = await _client.Exec.ExecCreateContainerAsync(
+                    containersResponse.First().ID,//containerResponse.ID,
+                    new ContainerExecCreateParameters()
+                    {
+                        Cmd = new[]
+                        {
+                            "/bin/sh", "-c",  " mkdir -p /dump/yyyyMMdd_HHmmss123456",
 
-                //// way 2
-                //// code reference in the first comment of https://github.com/dotnet/Docker.DotNet/issues/367
-                //bool started = await _client.Containers.StartContainerAsync(containerResponse.ID, null);
-                //using (var stream = await _client.Exec.StartAndAttachContainerExecAsync(
-                //    containerResponse.ID,
-                //    false,
-                //    default(CancellationToken)))
-                //{
-                //    var filePath = "dump/" + new Random().Next(1000);
-                //    var createFolder = Encoding.ASCII.GetBytes($"mkdir -p " + filePath);
-                //    var mongodump = Encoding.ASCII.GetBytes($"mongodump  --forceTableScan --db CorrectionLoop --out " + filePath);
-                //    await stream.WriteAsync(createFolder, 0, createFolder.Length, default(CancellationToken));
-                //    await stream.WriteAsync(mongodump, 0, mongodump.Length, default(CancellationToken));
-                //}
+                        }
+                    });
 
+                await _client.Exec.StartContainerExecAsync(execResponse.ID);
+
+                var execResponse2 = await _client.Exec.ExecCreateContainerAsync(
+                    containersResponse.First().ID,//containerResponse.ID,
+                    new ContainerExecCreateParameters()
+                    {
+                        Cmd = new[]
+                        {
+                            "/bin/sh", "-c",  " mongodump  --forceTableScan --db CorrectionLoop --out dump/yyyyMMdd_HHmmss123456"
+                        }
+                    });
+
+                await _client.Exec.StartContainerExecAsync(execResponse2.ID);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e.Message);
-                throw;
+                Console.WriteLine(ex.Message);
             }
         }
     }
